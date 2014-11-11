@@ -29,7 +29,7 @@ namespace TestApp
         {
 
             //CouchbaseTest();
-           // CouchbaseLoadTest_Insert();
+            //CouchbaseLoadTest_Insert();
             //CouchbaseLoadTest_Get();
             //CouchbaseLoadTest_GetBulk();
             //MongoTest();
