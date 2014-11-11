@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Linq.Dynamic;
 using System.Text;
 using System.Threading.Tasks;
 using System.Dynamic;
@@ -38,7 +37,7 @@ namespace TestApp
             //MongoLoadTest_GetBulk();
             //SQLLoadTest_Insert();
             //SQLLoadTest_Get();
-            ToMongoFromSql("localhost", "testDB", "test1");
+            ToMongoFromSql("localhost", "testDB", "test2");
             GetDataFromMongo("test1");
         }
 
