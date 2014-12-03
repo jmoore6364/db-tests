@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Linq.Dynamic;
 using System.Text;
 using System.Threading.Tasks;
 using System.Dynamic;
@@ -37,8 +38,10 @@ namespace TestApp
             //MongoLoadTest_GetBulk();
             //SQLLoadTest_Insert();
             //SQLLoadTest_Get();
-            ToMongoFromSql("localhost", "testDB", "test2");
-            GetDataFromMongo("test1");
+            //ToMongoFromSql("localhost", "db", "table");
+            GetDataFromMongo("collection");
+            //SqlQuery("localhost", "test", "test_5034");
+            //LoadMainTableInMongo("localhost");
         }
 
         static void CouchbaseTest()
@@ -164,8 +167,8 @@ namespace TestApp
             var customer = new customer
             {
                 Id = "customer1",
-                Name = "Jason",
-                Location = "Walnut Creek, CA",
+                Name = "jack",
+                Location = "somewhere, CA",
                 Data1 = "jkhdrt8923758ehrgsd;nblt'oktqr9ie[29384Q9W[EURQ8W4TUPQ98734THFQWENRPV987WSRYGWP98E",
                 Data2 = "jkhdrt8923758ehrgsd;nblt'oktqr9ie[29384Q9W[EURQ8W4TUPQ98734THFQWENRPV987WSRYGWP98E",
                 Data3 = "jkhdrt8923758ehrgsd;nblt'oktqr9ie[29384Q9W[EURQ8W4TUPQ98734THFQWENRPV987WSRYGWP98E",
@@ -248,9 +251,11 @@ namespace TestApp
         
         static void ToMongoFromSql(string server, string db, string table)
         {
+            
             IEnumerable<dynamic> data;
             using (var con = new SqlConnection(String.Format("server={0};database={1};Trusted_Connection=true;", server, db)))
                 data = con.Query(String.Format("select * from {0}", table));
+
             var database = new MongoClient("mongodb://localhost").GetServer().GetDatabase("local");
             MongoCollection<BsonDocument> collection = null;
             if (database.CollectionExists(table))
@@ -264,25 +269,56 @@ namespace TestApp
             Console.ReadKey();
         }
 
+        static void MongoSave(string collectionName, IEnumerable<dynamic> data)
+        {
+            var database = new MongoClient("mongodb://localhost").GetServer().GetDatabase("local");
+            if (!database.CollectionExists(collectionName))
+                database.CreateCollection(collectionName);
+            var collection = database.GetCollection(collectionName);
+            foreach (var row in data)
+                collection.Save(new BsonDocument(row));
+        }
+
+        static void LoadMainTableInMongo(string server)
+        {
+            var masters = SqlQuery(server, "db", "table");
+            foreach (dynamic master in masters)
+            {
+                var table = "table_" + master.ID;
+                IEnumerable<dynamic> data = SqlQuery(server, "sqlDB", table);
+                MongoSave("collection", data);
+                data = null;
+            }
+        }
+
+        static IEnumerable<dynamic> SqlQuery(string server, string db, string table)
+        {
+            IEnumerable<dynamic> data;
+            var d = DateTime.Now;
+            using (var con = new SqlConnection(String.Format("server={0};database={1};Trusted_Connection=true;", server, db)))
+                data = con.Query(String.Format("select * from {0}", table));
+            Console.WriteLine(DateTime.Now.Subtract(d).TotalSeconds);
+            return data;
+        }
+
         static void GetDataFromMongo(string collectionName)
         {
             var d = DateTime.Now;
-            var collection = (new MongoClient("mongodb://localhost")
+            var collection = (new MongoClient("")
                 .GetServer()
-                .GetDatabase("local"))
+                .GetDatabase("jason2"))
                 .GetCollection(collectionName)
-                .AsQueryable<ExpandoObject>().ToList();
+                .AsQueryable<BsonDocument>().Where(x => x["_id"] == "customer100").ToList();
+            Console.WriteLine(collection.Count());
             Console.WriteLine(DateTime.Now.Subtract(d).TotalSeconds);
             Console.ReadKey();
         }
-
-        
 
         static void Mongo_SimpleTest()
         {
             var connectionString = "mongodb://localhost/local";
             dynamic db = Database.Opener.OpenMongo(connectionString);
-            db.test.Insert(Id: "customer1", Name: "Jason", Location: "Somewhere, CA" );
+            db.test.Insert(Id: "customer1", Name: "test", Location: "Somewhere, CA" );
         }
 
         public static bool IsSettingsExist(dynamic settings, string name)
