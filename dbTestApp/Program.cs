@@ -256,7 +256,7 @@ namespace TestApp
             using (var con = new SqlConnection(String.Format("server={0};database={1};Trusted_Connection=true;", server, db)))
                 data = con.Query(String.Format("select * from {0}", table));
 
-            var database = new MongoClient("mongodb://localhost").GetServer().GetDatabase("local");
+            var database = new MongoClient("mongodb://localhost1").GetServer().GetDatabase("local");
             MongoCollection<BsonDocument> collection = null;
             if (database.CollectionExists(table))
                 database.DropCollection(table);
